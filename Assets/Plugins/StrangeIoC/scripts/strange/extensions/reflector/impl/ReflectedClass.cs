@@ -39,6 +39,7 @@ namespace strange.extensions.reflector.impl
 		public object[] ConstructorParameterNames { get; set; }
 		public MethodInfo[] PostConstructors{ get; set;}
 		public ReflectedAttribute[] Setters { get; set; }
+		public ReflectedField[] Fields { get; set; }
 		public object[] SetterNames{ get; set;}
 		public bool PreGenerated{ get; set;}
 

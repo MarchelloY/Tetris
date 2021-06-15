@@ -158,6 +158,7 @@ namespace strange.extensions.injector.impl
 				target = performConstructorInjection(target, reflection);
 			}
 			performSetterInjection(target, reflection);
+			PerformFieldInjection(target, reflection);
 			postInject(target, reflection);
 			return target;
 		}
@@ -218,7 +219,19 @@ namespace strange.extensions.injector.impl
 			}
 		}
 
-		private object getValueInjection(Type t, object name, object target, PropertyInfo propertyInfo)
+		private void PerformFieldInjection(object target, IReflectedClass reflection)
+		{
+			failIf(target == null, "Attempt to inject into a null object", InjectionExceptionType.NULL_TARGET);
+			failIf(reflection == null, "Attempt to inject without a reflection", InjectionExceptionType.NULL_REFLECTION);
+
+			foreach (var attr in reflection.Fields)
+			{
+				var value = getValueInjection(attr.Type, attr.Name, target, attr.FieldInfo);
+				InjectValueIntoField(value, target, attr.FieldInfo);
+			}
+		}
+
+		private object getValueInjection(Type t, object name, object target, MemberInfo propertyInfo)
 		{
 			IInjectionBinding suppliedBinding = null;
 			if (target != null)
@@ -264,6 +277,15 @@ namespace strange.extensions.injector.impl
 			point.SetValue (target, value, null);
 		}
 
+		private void InjectValueIntoField(object value, object target, FieldInfo field)
+		{
+			failIf(target == null, "Attempt to inject into a null target", InjectionExceptionType.NULL_TARGET);
+			failIf(field == null, "Attempt to inject into a null point", InjectionExceptionType.NULL_INJECTION_POINT);
+			failIf(value == null, "Attempt to inject null into a target object", InjectionExceptionType.NULL_VALUE_INJECTION);
+
+			field.SetValue(target, value);
+		}
+
 		//After injection, call any methods labelled with the [PostConstruct] tag
 		private void postInject(object target, IReflectedClass reflection)
 		{
@@ -297,7 +319,7 @@ namespace strange.extensions.injector.impl
 			failIf(condition, message, type, t, name, null);
 		}
 
-		private void failIf(bool condition, string message, InjectionExceptionType type, Type t, object name, object target, PropertyInfo propertyInfo)
+		private void failIf(bool condition, string message, InjectionExceptionType type, Type t, object name, object target, MemberInfo propertyInfo)
 		{
 			if (condition)
 			{

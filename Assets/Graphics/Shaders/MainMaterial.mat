@@ -1,0 +1,63 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 6
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: MainMaterial
+  m_Shader: {fileID: -6465566751694194690, guid: 3c192fce97bda4ceea3f9f981f65ad3c,
+    type: 3}
+  m_ShaderKeywords: 
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _BackGround:
+        m_Texture: {fileID: 2800000, guid: 48f695a180f5042ad8b377ad0dba2d72, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BackgorundTex:
+        m_Texture: {fileID: 2800000, guid: 48f695a180f5042ad8b377ad0dba2d72, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_Lightmaps:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_LightmapsInd:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_ShadowMasks:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Floats:
+    - _ColorMask: 14.9
+    - _Stencil: 0
+    - _StencilComp: 8
+    - _StencilOp: 0
+    - _StencilReadMask: 255
+    - _StencilWriteMask: 255
+    - _UseUIAlphaClip: 0
+    m_Colors:
+    - Color_9169fba2cb5742e9a21e31f76aadd139: {r: 0, g: 0, b: 0, a: 0}
+    - Vector2_41e727552d0744178e0901eb4f93a836: {r: 5.93, g: 3.33, b: 0, a: 0}
+    - Vector2_645a10427b344b45aace37997db509d1: {r: 23.3, g: 5.05, b: 0, a: 0}
+    - Vector3_1188275ad10a495b89787df9687c975c: {r: 2, g: 3, b: 14, a: 15}
+    - _Color: {r: 7.72509, g: 14.259475, b: 0, a: 1}
+    - _Offset: {r: 0.0855, g: 0.158, b: 0, a: 0}
+    - _Tiling: {r: 0.0547, g: 0.0311, b: 0, a: 0}
+  m_BuildTextureStacks: []

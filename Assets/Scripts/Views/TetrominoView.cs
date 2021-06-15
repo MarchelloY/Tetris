@@ -1,33 +1,45 @@
+using System;
+using Diagnostics;
+using Models.api;
 using strange.extensions.mediation.impl;
-using strange.extensions.signal.impl;
+using Tools.Diagnostics;
 using UnityEngine;
+using Utils;
 
 namespace Views
 {
     public class TetrominoView : View
     {
-        public readonly Signal updateFallSignal = new Signal();
+        [SerializeField]
+        private Vector3 _rotationPosition;
+        [SerializeField]
+        private Vector3 _previewPosition;
 
-        [SerializeField] public Vector3 rotationPosition;
-        [SerializeField] public Vector3 previewPosition;
-        public bool IsBoost { get; set; }
+        private float _prevFallDelay;
+        private IGameStateModel _gameStateModel;
 
-        private float FallTime { get; set; }
-        private float _prevFallTime;
+        public event Action Fell;
 
-        public void Init(float value)
+        public Vector3 RotationPosition => _rotationPosition;
+        public Vector3 PreviewPosition => _previewPosition;
+
+        public void Init(IGameStateModel gameStateModel)
         {
-            FallTime = value;
-            _prevFallTime = Time.time;
+            _prevFallDelay = Time.time;
+            _gameStateModel = gameStateModel;
+
+            Debugger.Log(LogEntryCategory.Tetromino,
+                $"{nameof(TetrominoView)} initialization completed successfully");
         }
 
         private void LateUpdate()
         {
-            if (Time.time - _prevFallTime > (IsBoost ? FallTime / 20 : FallTime))
+            if (Time.time - _prevFallDelay > _gameStateModel.FallDelay)
             {
-                _prevFallTime = Time.time;
-                updateFallSignal.Dispatch();
-                IsBoost = false;
+                _prevFallDelay = Time.time;
+                Fell.SafeInvoke();
+
+                Debugger.Log(LogEntryCategory.Tetromino, $"Figure {gameObject.name} moved down");
             }
         }
     }

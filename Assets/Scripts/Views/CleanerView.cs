@@ -1,4 +1,6 @@
+using Diagnostics;
 using strange.extensions.mediation.impl;
+using Tools.Diagnostics;
 
 namespace Views
 {
@@ -6,7 +8,12 @@ namespace Views
     {
         private void Update()
         {
-            if (transform.childCount == 0) Destroy(gameObject);
+            if (transform.childCount == 0)
+            {
+                Destroy(gameObject);
+
+                Debugger.Log(LogEntryCategory.Tetromino, $"Tetromino {gameObject.name} has been removed");
+            }
         }
     }
 }

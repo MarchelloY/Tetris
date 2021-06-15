@@ -1,11 +1,15 @@
+using UnityEngine;
+
 namespace Models.api
 {
     public interface ITetrominoModel
     {
-        void MoveLeft();
-        void MoveRight();
-        void Rotate();
-        void Update();
-        bool IsBoost { get; set; }
+        GameObject CurrentTetromino { get; }
+        void Init();
+        void NextStep();
+        bool MoveLeft();
+        bool MoveRight();
+        bool MoveDown();
+        bool Rotate();
     }
 }

@@ -1,28 +1,38 @@
+using Data;
+using Services.api;
 using Signals;
 using strange.extensions.mediation.impl;
-using UnityEngine;
 using Views;
 
 namespace Mediators
 {
     public class KeyControlMediator : Mediator
     {
-        [Inject] public KeyPressedSignal KeyPressedSignal { get; set; }
-        [Inject] public KeyControlView ButtonControlView { get; set; }
+        [Inject]
+        private readonly KeyControlView _view = null;
+        [Inject]
+        private readonly IDataService _dataService = null;
+        [Inject]
+        private readonly PlayerActionHappenedSignal _playerActionHappenedSignal = null;
 
         public override void OnRegister()
         {
-            ButtonControlView.keyPressedSignal.AddListener(OnKeyPressed);
+            base.OnRegister();
+
+            _view.Init(_dataService.MoveDelay);
+            _view.KeyPressed += OnKeyPressed;
         }
 
         public override void OnRemove()
         {
-            ButtonControlView.keyPressedSignal.RemoveListener(OnKeyPressed);
+            base.OnRemove();
+
+            _view.KeyPressed += OnKeyPressed;
         }
     
-        private void OnKeyPressed(KeyCode key)
+        private void OnKeyPressed(PlayerAction playerAction)
         {
-            KeyPressedSignal.Dispatch(key);
+            _playerActionHappenedSignal.Dispatch(playerAction);
         }
     }
 }

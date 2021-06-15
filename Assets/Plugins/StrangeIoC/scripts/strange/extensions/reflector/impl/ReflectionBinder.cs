@@ -53,6 +53,7 @@ namespace strange.extensions.reflector.impl
 				binding = GetRawBinding ();
 				IReflectedClass reflected = new ReflectedClass ();
 				mapPreferredConstructor (reflected, binding, type);
+				mapFields(reflected, binding, type);
 				mapSetters (reflected, binding, type); //map setters before mapping methods
 				mapMethods (reflected, binding, type); 
 				binding.Bind (type).To (reflected);
@@ -221,6 +222,44 @@ namespace strange.extensions.reflector.impl
 				}
 			}
 			reflected.Setters = namedAttributes.Values.ToArray();
+		}
+
+		private void mapFields(IReflectedClass reflected, IBinding binding, Type type)
+		{
+			var members = type.FindMembers(MemberTypes.Field,
+				BindingFlags.FlattenHierarchy |
+				BindingFlags.NonPublic |
+				BindingFlags.Instance,
+				null, null);
+
+			var namedAttributes = new Dictionary<string, ReflectedField>();
+
+			foreach (var member in members)
+			{
+				var injections = member.GetCustomAttributes(typeof(Inject), true);
+
+				if (injections.Length > 0)
+				{
+					var attr = (Inject)injections[0];
+					var field = (FieldInfo)member;
+
+					var baseType = member.DeclaringType?.BaseType;
+					var hasInheritedProperty = baseType != null && baseType.GetFields().Any(p => p.Name == field.Name);
+					var toAddOrOverride = true;
+
+					if (namedAttributes.ContainsKey(field.Name))
+					{
+						toAddOrOverride = hasInheritedProperty;
+					}
+
+					if (toAddOrOverride)
+					{
+						namedAttributes[field.Name] = new ReflectedField(field.FieldType, field, attr.name);
+					}
+				}
+			}
+
+			reflected.Fields = namedAttributes.Values.ToArray();
 		}
 	}
 

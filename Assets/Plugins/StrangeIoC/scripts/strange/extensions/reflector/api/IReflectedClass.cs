@@ -46,6 +46,8 @@ namespace strange.extensions.reflector.api
 		/// Get/set the list of setter injections. This includes inherited setters.
 		ReflectedAttribute[] Setters { get; set; }
 
+		ReflectedField[] Fields { get; set; }
+
 		/// For testing. Allows a unit test to assert whether the binding was
 		/// generated on the current call, or on a prior one.
 		bool PreGenerated{ get; set;}
@@ -79,6 +81,20 @@ namespace strange.extensions.reflector.api
 			this.type = type;
 			this.propertyInfo = propertyInfo;
 			this.name = name;
+		}
+	}
+
+	public struct ReflectedField
+	{
+		public readonly Type Type;
+		public readonly object Name;
+		public readonly FieldInfo FieldInfo;
+
+		public ReflectedField(Type type, FieldInfo fieldInfo, object name)
+		{
+			Type = type;
+			FieldInfo = fieldInfo;
+			Name = name;
 		}
 	}
 }

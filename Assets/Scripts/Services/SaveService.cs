@@ -1,5 +1,5 @@
-using System;
 using System.IO;
+using Data;
 using Services.api;
 using UnityEngine;
 
@@ -7,55 +7,51 @@ namespace Services
 {
     public class SaveService : ISaveService
     {
-        private readonly string _path;
-    
-        public SaveService(string path)
-        {
-            _path = Path.Combine(Application.persistentDataPath, path);
-        }
-    
-        private void SaveData<T>(T t)
-        {
-            var jsonData = JsonUtility.ToJson(t);
-            if (!File.Exists(_path)) File.Create(_path).Close();
-            File.WriteAllText(_path, jsonData);
-        }
+        private static readonly string SAVE_PATH = Path.Combine(Application.persistentDataPath, "saves.json");
 
         public object ReadData<T>()
         {
-            if (!File.Exists(_path)) return null;
-            var data = File.ReadAllText(_path);
-            if (data.Length == 0) return null;
-            var t = JsonUtility.FromJson<T>(data);
-            return t;
+            if (File.Exists(SAVE_PATH))
+            {
+                var data = File.ReadAllText(SAVE_PATH);
+
+                if (data.Length != 0)
+                {
+                    var t = JsonUtility.FromJson<T>(data);
+
+                    return t;
+                }
+            }
+
+            return null;
         }
 
-        public void WriteSaveInFile(int currentScore, int currentLines)
+        public void WriteSaveInFile(GameData gameData)
         {
             var saveData = (SaveData) ReadData<SaveData>();
 
-            if (saveData == null)
+            var data = new SaveData
             {
-                SaveData(new SaveData {
-                    highLines = currentLines,
-                    highScore = currentScore
-                });
-                return;
+                HighScore = gameData.Score,
+                HighLines = gameData.Lines,
+            };
+
+            if (saveData == null || (saveData.HighScore < gameData.Score || saveData.HighLines < gameData.Lines))
+            {
+                SaveData(data);
+            }
+        }
+
+        private void SaveData<T>(T t)
+        {
+            var jsonData = JsonUtility.ToJson(t);
+
+            if (!File.Exists(SAVE_PATH))
+            {
+                File.Create(SAVE_PATH).Close();
             }
 
-            if (saveData.highScore < currentScore || saveData.highLines < currentLines) 
-                SaveData(new SaveData {
-                    highLines = currentLines,
-                    highScore = currentScore
-                });
+            File.WriteAllText(SAVE_PATH, jsonData);
         }
-    
-    }
-
-    [Serializable]
-    public class SaveData
-    {
-        public int highScore;
-        public int highLines;
     }
 }

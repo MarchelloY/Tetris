@@ -1,5 +1,7 @@
+using Data;
 using Models.api;
 using Services.api;
+using Signals;
 using UnityEngine;
 using Views;
 using Vector3 = UnityEngine.Vector3;
@@ -8,119 +10,86 @@ namespace Models
 {
     public class TetrominoModel : ITetrominoModel
     {
-        [Inject] public IAudioModel AudioModel { get; set; }
-        [Inject] public IDataService DataService { get; set; }
-        [Inject] public IScoreModel ScoreModel { get; set; }
-        [Inject] public IGameStateModel GameStateModel { get; set; }
-        [Inject] public IGridModel GridModel { get; set; }
-        
-        private const float MoveTime = 0.1f;
-        private float _prevMoveTime;
-        
-        public bool IsBoost { get; set; }
-        
-        public void Update()
+        [Inject]
+        private readonly IDataService _dataService = null;
+        [Inject]
+        private readonly IGridModel _gridModel = null;
+        [Inject]
+        private readonly ChangeLightBulbsColorSignal _changeLightBulbsColorSignal = null;
+
+        private GameObject _previewTetromino;
+
+        public GameObject CurrentTetromino { get; private set; }
+
+        public void Init()
         {
-            if (GameStateModel == null) return;
-            if (GameStateModel.IsPause || GameStateModel.IsGameOver) return;
-            MoveDown();
-        }
-    
-        public void MoveLeft()
-        {
-            var currentTransform = GameStateModel.NextTetromino.transform;
-            var currentView = currentTransform.GetComponent<TetrominoView>();
-            
-            if (!(Time.time - _prevMoveTime > MoveTime)) return;
-            
-            _prevMoveTime = Time.time;
-            currentTransform.position += Vector3.left;
-            if (!CheckIsValidPosition())
-                currentTransform.position += Vector3.right;
-            else
-            {
-                GridModel.UpdateGrid(currentView);
-                AudioModel.ShotAudio(DataService.MoveClip);
-            }
+            CurrentTetromino = Object.Instantiate(_dataService.GetRandomTetromino(),
+                _dataService.PositionSpawn, Quaternion.identity);
+
+            CreatePreviewTetromino();
         }
 
-        public void MoveRight()
+        public void NextStep()
         {
-            var currentTransform = GameStateModel.NextTetromino.transform;
-            var currentView = currentTransform.GetComponent<TetrominoView>();
-            
-            if (!(Time.time - _prevMoveTime > MoveTime)) return;
-            
-            _prevMoveTime = Time.time;
-            currentTransform.position += Vector3.right;
-            if (!CheckIsValidPosition())
-                currentTransform.position += Vector3.left;
-            else
-            {
-                GridModel.UpdateGrid(currentView);
-                AudioModel.ShotAudio(DataService.MoveClip);
-            }
+            _previewTetromino.transform.localPosition = _dataService.PositionSpawn;
+            _previewTetromino.transform.localScale /= _dataService.PreviewScale;
+
+            CurrentTetromino.GetComponent<TetrominoView>().enabled = false;
+            CurrentTetromino = _previewTetromino;
+            CurrentTetromino.GetComponent<TetrominoView>().enabled = true;
+
+            _changeLightBulbsColorSignal.Dispatch(StringCollection.YELLOW_COLOR);
+
+            CreatePreviewTetromino();
         }
 
-        public void Rotate()
+        public bool MoveLeft() => Move(Vector3.left);
+        public bool MoveRight() => Move(Vector3.right);
+        public bool MoveDown() => Move(Vector3.down);
+
+        public bool Rotate()
         {
-            var currentTransform = GameStateModel.NextTetromino.transform;
+            var currentTransform = CurrentTetromino.transform;
             var currentView = currentTransform.GetComponent<TetrominoView>();
+
             currentTransform.RotateAround(
-                currentTransform.TransformPoint(currentView.rotationPosition), Vector3.forward, -90);
-            if (!CheckIsValidPosition())
-                currentTransform.RotateAround(
-                    currentTransform.TransformPoint(currentView.rotationPosition), Vector3.forward, 90);
-            else
+                currentTransform.TransformPoint(currentView.RotationPosition), Vector3.forward, -90);
+
+            if (_gridModel.CheckIsValidPosition(currentTransform))
             {
-                GridModel.UpdateGrid(currentView);
-                AudioModel.ShotAudio(DataService.RotateClip);
+                return false;
             }
+
+            currentTransform.RotateAround(
+                currentTransform.TransformPoint(currentView.RotationPosition), Vector3.forward, 90);
+
+            return true;
         }
 
-        private void MoveDown()
+        private bool Move(Vector3 direction)
         {
-            var currentTransform = GameStateModel.NextTetromino.transform;
-            var currentView = currentTransform.GetComponent<TetrominoView>();
-            
-            currentTransform.position += Vector3.down;
-        
-            if (IsBoost) ScoreModel.BoostScore();
-        
-            if (!CheckIsValidPosition())
+            var currentTransform = CurrentTetromino.transform;
+
+            currentTransform.position += direction * _dataService.MoveStep;
+
+            if (_gridModel.CheckIsValidPosition(currentTransform))
             {
-                currentTransform.position += Vector3.up;
-                GridModel.DeleteRow();
-                if (GridModel.CheckIsAboveGrid(currentView))
-                    GameStateModel.GameOver();
-                currentView.enabled = false;
-                if (!GameStateModel.IsGameOver)
-                {
-                    AudioModel.ShotAudio(DataService.DropClip);
-                    GameStateModel.SpawnNextTetromino();
-                }
+                return false;
             }
-            else
-            {
-                var current = GameStateModel.NextTetromino.GetComponent<TetrominoView>();
-                GridModel.UpdateGrid(current);
-                AudioModel.ShotAudio(DataService.MoveClip);
-            }
-            IsBoost = false;
-        }
-    
-        private bool CheckIsValidPosition()
-        {
-            var current = GameStateModel.NextTetromino.transform;
-            foreach (Transform mino in current)
-            {
-                if (GridModel == null) return false;
-                var pos = GridModel.Round(mino.position);
-                if (!GridModel.CheckIsInsideBoard(pos)) return false;
-                if (GridModel.GetTransformAtGridPosition(pos) != null &&
-                    GridModel.GetTransformAtGridPosition(pos).parent != current) return false;
-            }
+
+            currentTransform.position -= direction * _dataService.MoveStep;
+
             return true;
+        }
+
+        private void CreatePreviewTetromino()
+        {
+            var previewObject = _dataService.GetRandomTetromino();
+            var previewPosition = previewObject.GetComponent<TetrominoView>().PreviewPosition;
+
+            _previewTetromino = Object.Instantiate(previewObject, previewPosition, Quaternion.identity);
+            _previewTetromino.transform.localScale *= _dataService.PreviewScale;
+            _previewTetromino.GetComponent<TetrominoView>().enabled = false;
         }
     }
 }

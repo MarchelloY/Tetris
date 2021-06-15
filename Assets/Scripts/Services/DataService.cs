@@ -1,3 +1,4 @@
+using Data;
 using Services.api;
 using UnityEngine;
 
@@ -5,27 +6,23 @@ namespace Services
 {
     public class DataService : IDataService
     {
-        private readonly Data.Data _data;
+        private readonly SettingsProvider _provider;
 
         public DataService()
         {
-            _data = Object.FindObjectOfType<Data.Data>();
+            _provider = Object.FindObjectOfType<SettingsProvider>();
         }
 
-        public int GridWidth => _data.gameSettings.GridWidth;
-        public int GridHeight => _data.gameSettings.GridHeight;
-        public AudioClip DropClip => _data.gameSettings.DropClip;
-        public AudioClip MoveClip => _data.gameSettings.MoveClop;
-        public AudioClip RotateClip => _data.gameSettings.RotateClip;    
-        public AudioClip ResumeClip => _data.gameSettings.ResumeClip;
-        public AudioClip PauseClip => _data.gameSettings.PauseClip;
-        public AudioClip NewGameClip => _data.gameSettings.NewGameClip;
-        public Vector3 PositionSpawn => _data.gameSettings.PositionSpawn;
-        public char[] TetrominoIds => _data.gameSettings.TetrominoIds;
-        public string TetrominoPath => _data.gameSettings.TetrominoPath;
-        public float PreviewScale => _data.gameSettings.PreviewScale;
-        public int CostOneLevelInLines => _data.gameSettings.CostOneLevelInLines;
-        public float FallTimeMin => _data.gameSettings.FallTimeMin;
-        public float FallTimeModifier => _data.gameSettings.FallTimeModifier;
+        public int GridWidth => _provider.gameSettings.GridWidth;
+        public int GridHeight => _provider.gameSettings.GridHeight;
+        public Vector3 PositionSpawn => _provider.gameSettings.PositionSpawn;
+        public float PreviewScale => _provider.gameSettings.PreviewScale;
+        public int CostOneLevelInLines => _provider.gameSettings.CostOneLevelInLines;
+        public float FallDelayMin => _provider.gameSettings.FallDelayMin;
+        public float FallDelayModifier => _provider.gameSettings.FallDelayModifier;
+        public float FallBoostModifier => _provider.gameSettings.FallBoostModifier;
+        public float MoveDelay => _provider.gameSettings.MoveDelay;
+        public float MoveStep => _provider.gameSettings.MoveStep;
+        public GameObject GetRandomTetromino() => _provider.gameSettings.GetRandomTetromino();
     }
 }

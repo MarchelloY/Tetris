@@ -6,23 +6,28 @@ namespace Mediators
 {
     public class ButtonMediator : Mediator
     {
-        [Inject] public ButtonView ButtonsView { get; set; }
-    
-        [Inject] public ButtonClickedSignal ButtonClickedSignal { get; set; }
+        [Inject]
+        private readonly ButtonView _view = null;
+        [Inject]
+        private readonly ButtonClickedSignal _buttonClickedSignal = null;
 
         public override void OnRegister()
         {
-            ButtonsView.buttonClickedSignal.AddListener(OnButtonClicked);
+            base.OnRegister();
+
+            _view.ButtonClicked += OnButtonClicked;
         }
 
         public override void OnRemove()
         {
-            ButtonsView.buttonClickedSignal.RemoveListener(OnButtonClicked);
+            base.OnRemove();
+
+            _view.ButtonClicked -= OnButtonClicked;
         }
 
-        private void OnButtonClicked(string name)
+        private void OnButtonClicked(string buttonName)
         {
-            ButtonClickedSignal.Dispatch(name);
+            _buttonClickedSignal.Dispatch(buttonName);
         }
     }
 }

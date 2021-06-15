@@ -1,63 +1,56 @@
+using Data;
 using Models.api;
 using Services.api;
 using Signals;
 using UnityEngine;
+using Utils;
 
 namespace Models
 {
     public class ScoreModel : IScoreModel
     {
-        [Inject("Save")] public ISaveService SaveService { get; set; }
-        [Inject] public MainUIUpdatedSignal MainUIUpdatedSignal { get; set; }
-        [Inject] public IDataService DataService { get; set; }
+        private const int MAX_LINES_COUNT = 4;
 
+        [Inject]
+        private readonly ISaveService _saveService = null;
+        [Inject]
+        private readonly MainUIUpdatedSignal _mainUIUpdatedSignal = null;
+        [Inject]
+        private readonly IDataService _dataService = null;
+        [Inject]
+        private readonly IGameStateModel _gameStateModel = null;
 
-        private int[] ComboScore { get; set; }
+        private int[] _scoreForClearedRows;
         
         private int _currentScore;
         private int _currentLines;
         private int _currentLevel;
 
-        public float FallTime { get; set; } = 1f;
-        
-        public void InitCombo()
+        public void Init()
         {
-            ComboScore = new int[4];
-            for (var i = 0; i < ComboScore.Length; i++)
-                ComboScore[i] = (int) (100 * (Mathf.Pow(2,i + 1) - 1));
+            _scoreForClearedRows = new int[MAX_LINES_COUNT].GetComboScore();
+            _currentLevel = 1;
         }
 
-        public void Update(int lines)
+        public void UpdateScoreByLines(int lines)
         {
             UpdateLines(lines);
-            UpdateLevels();
+            UpdateLevel();
             UpdateScore(lines);
             
-            SaveService.WriteSaveInFile(_currentScore, _currentLines);
-            MainUIUpdatedSignal.Dispatch(new[] {_currentScore, _currentLines, _currentLevel});
+            DoDispatchMainUIUpdatedSignal();
         }
 
-        public void BoostScore()
+        public void UpdateScoreByBoost()
         {
             _currentScore++;
             
-            SaveService.WriteSaveInFile(_currentScore, _currentLines);
-            MainUIUpdatedSignal.Dispatch(new[] {_currentScore, _currentLines, _currentLevel});
-        }
-
-        public void TestScore(int lines)
-        {
-            InitCombo();
-            UpdateScore(lines);
-            UpdateLines(lines);
-            MainUIUpdatedSignal.Dispatch(new[] {_currentScore, _currentLines, 0});
+            DoDispatchMainUIUpdatedSignal();
         }
 
         private void UpdateScore(int lines)
         {
-            for (var i = 0; i < ComboScore.Length; i++)
-                if (lines == i + 1)
-                    _currentScore += ComboScore[i] + _currentLevel * (i + 1) * 2;
+            _currentScore += _scoreForClearedRows[lines - 1] + (2 * (lines + 1) * _currentLevel);
         }
 
         private void UpdateLines(int lines)
@@ -65,12 +58,37 @@ namespace Models
             _currentLines += lines;
         }
 
-        private void UpdateLevels()
+        private void UpdateLevel()
         {
-            _currentLevel = _currentLines / DataService.CostOneLevelInLines;
-            var temp = 1f - _currentLevel * DataService.FallTimeModifier;
-            if (temp < DataService.FallTimeMin) temp = DataService.FallTimeMin;
-            FallTime = temp;
+            _currentLevel = (_currentLines / _dataService.CostOneLevelInLines) + 1;
+
+            UpdateFallDelay();
+        }
+
+        private void UpdateFallDelay()
+        {
+            var temp = Mathf.Max(_dataService.FallDelayMin,
+                1f - (_currentLevel - 1) * _dataService.FallDelayModifier);
+
+            if (temp < _dataService.FallDelayMin)
+            {
+                temp = _dataService.FallDelayMin;
+            }
+
+            _gameStateModel.FallDelay = temp;
+        }
+
+        private void DoDispatchMainUIUpdatedSignal()
+        {
+            var gameData = new GameData()
+            {
+                Score = _currentScore,
+                Lines = _currentLines,
+                Level = _currentLevel,
+            };
+
+            _saveService.WriteSaveInFile(gameData);
+            _mainUIUpdatedSignal.Dispatch(gameData);
         }
     }
 }

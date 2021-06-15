@@ -1,33 +1,49 @@
-using DG.Tweening;
+using System;
+using Diagnostics;
 using strange.extensions.mediation.impl;
-using strange.extensions.signal.impl;
+using Tools.Diagnostics;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using Utils;
 
 namespace Views
 {
     public class ButtonView : View,
-        IPointerEnterHandler, 
-        IPointerExitHandler, 
+        IPointerEnterHandler,
+        IPointerExitHandler,
         IPointerClickHandler
     {
-        public readonly Signal<string> buttonClickedSignal = new Signal<string>(); 
-    
-        [SerializeField] private float duration;
+        [SerializeField]
+        private string _buttonName;
+        [SerializeField]
+        private Vector3 _scale;
+
+        public event Action<string> ButtonClicked;
+
+        protected override void OnEnable()
+        {
+            transform.localScale = Vector3.one;
+        }
 
         public void OnPointerEnter(PointerEventData eventData)
         {
-            transform.DOScale(Vector3.one * 1.1f, duration);
+            transform.localScale = Vector3.one + _scale;
+
+            Debugger.Log(LogEntryCategory.Input, $"Button has increased {_scale.x} times");
         }
 
         public void OnPointerExit(PointerEventData eventData)
         {
-            transform.DOScale(Vector3.one, duration);
+            transform.localScale = Vector3.one;
+
+            Debugger.Log(LogEntryCategory.Input, $"Button has decreased {_scale.x} times");
         }
     
         public void OnPointerClick(PointerEventData eventData)
         {
-            buttonClickedSignal.Dispatch(eventData.selectedObject.name);
+            ButtonClicked.SafeInvoke(_buttonName);
+
+            Debugger.Log(LogEntryCategory.Input, $"The {_buttonName} button was pressed");
         }
     }
 }

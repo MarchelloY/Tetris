@@ -1,4 +1,5 @@
 using Models.api;
+using Signals;
 using strange.extensions.mediation.impl;
 using Views;
 
@@ -6,24 +7,31 @@ namespace Mediators
 {
     public class TetrominoMediator : Mediator
     {
-        [Inject] public TetrominoView TetrominoView { get; set; }
-        [Inject] public ITetrominoModel TetrominoModel { get; set; }
-        [Inject] public IScoreModel ScoreModel { get; set; }
+        [Inject]
+        private readonly TetrominoView _view = null;
+        [Inject]
+        private readonly IGameStateModel _gameStateModel = null;
+        [Inject]
+        private readonly FellSignal _fellSignal = null;
 
         public override void OnRegister()
         {
-            TetrominoView.Init(ScoreModel.FallTime);
-            TetrominoView.updateFallSignal.AddListener(UpdateFall);
+            base.OnRegister();
+
+            _view.Init(_gameStateModel);
+            _view.Fell += OnFell;
         }
 
         public override void OnRemove()
         {
-            TetrominoView.updateFallSignal.RemoveListener(UpdateFall);
+            base.OnRemove();
+
+            _view.Fell -= OnFell;
         }
 
-        private void UpdateFall()
+        private void OnFell()
         {
-            TetrominoModel.Update();
+            _fellSignal.Dispatch();
         }
     }
 }

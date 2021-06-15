@@ -1,16 +1,14 @@
-using UnityEngine;
-
 namespace Models.api
 {
     public interface IGameStateModel
     {
-        bool IsGameOver { get; set; }
-        bool IsPause { get; set; }
-        void GameOver();
+        bool IsGameOver { get; }
+        bool IsPause { get; }
+        bool IsBoost { get; set; }
+        float FallDelay { get; set; }
         void Init();
-        void ShowPausePanel();
-        void HidePausePanel();
-        void SpawnNextTetromino();
-        GameObject NextTetromino { get; set; }
+        void Pause();
+        void Continue();
+        void GameOver();
     }
 }
